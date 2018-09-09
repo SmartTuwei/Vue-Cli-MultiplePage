@@ -11,7 +11,6 @@ exports.assetsPath = function (_path) {
   const assetsSubDirectory = process.env.NODE_ENV === 'production'
     ? config.build.assetsSubDirectory
     : config.dev.assetsSubDirectory
-    console.log(path.posix.join(assetsSubDirectory, _path) + "-----------------------")
   return path.posix.join(assetsSubDirectory, _path)
 }
 
@@ -89,6 +88,7 @@ exports.styleLoaders = function (options) {
 // 通过glob模块读取pages文件夹下的所有对应文件夹下的js后缀文件，如果该文件存在
 // 那么就作为入口处理
 exports.getMultiEntry = function (globPath) {
+  console.log(globPath)
   var entries = {},
     basename, tmp, pathname;
 

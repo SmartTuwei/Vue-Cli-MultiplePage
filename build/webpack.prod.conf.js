@@ -7,9 +7,9 @@ const merge = require('webpack-merge')
 const baseWebpackConfig = require('./webpack.base.conf')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
-const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')    //css打包成css文件已link的方式引入的包
+const OptimizeCSSPlugin = require('optimize-css-assets-webpack-plugin') // 压缩css的包
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin') //压缩js代码的包
 
 
 var entries = utils.getMultiEntry('./src/' + config.moduleName + '/**/**/*.js'); // 获得入口js文件
@@ -77,28 +77,30 @@ const webpackConfig = merge(baseWebpackConfig, {
     }),
     // extract webpack runtime and module manifest to its own file in order to
     // prevent vendor hash from being updated whenever app bundle is updated
-    // new webpack.optimize.CommonsChunkPlugin({
-    //   name: 'manifest',
-    //   minChunks: Infinity
-    // }),
+    // 为了避免每次更改项目代码时导致venderchunk的chunkHash改变，我们还会单独生成一个manifestchunk
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'manifest',
+      minChunks: Infinity
+    }),
     // This instance extracts shared chunks from code splitted chunks and bundles them
     // in a separate chunk, similar to the vendor chunk
     // see: https://webpack.js.org/plugins/commons-chunk-plugin/#extra-async-commons-chunk
-    // new webpack.optimize.CommonsChunkPlugin({
-    //   name: 'app',
-    //   async: 'vendor-async',
-    //   children: true,
-    //   minChunks: 3
-    // }),
+    //我们主要逻辑的js文件
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'app',
+      async: 'vendor-async', //开启路由异步加载
+      children: true,
+      minChunks: 3
+    }),
 
-    // copy custom static assets
-    // new CopyWebpackPlugin([
-    //   {
-    //     from: path.resolve(__dirname, '../static'),
-    //     to: config.build.assetsSubDirectory,
-    //     ignore: ['.*']
-    //   }
-    // ])
+    // copy custom static assets  拷贝资源文件到打包项目中   
+    new CopyWebpackPlugin([
+      {
+        from: path.resolve(__dirname, '../static'),
+        to: config.build.assetsSubDirectory,
+        ignore: ['.*']
+      }
+    ])
   ]
 })
 
@@ -131,7 +133,7 @@ for (var pathname in pages) {
   var conf = {
     filename: pathname.split("/")[1] + '.html',
     template: pages[pathname], // 模板路径
-    chunks: ['vendor', pathname], // 每个html引用的js模块
+    chunks: ['vendor',"manifest","app" , pathname], // 每个html引用的js模块
     inject: true,              // js插入位置
     hash: true
   };
